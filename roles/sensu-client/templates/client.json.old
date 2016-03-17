@@ -1,0 +1,8 @@
+{
+  "client": {
+    "name": "$UNDERCLOUD_IP",
+    "address": "$UNDERCLOUD_IP",
+    "subscriptions": [ "all" ]
+  }
+}
+

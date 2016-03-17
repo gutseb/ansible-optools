@@ -1,0 +1,5 @@
+---
+fluentd_port: 4000
+elasticsearch_port: 9200
+kibana_port: 80
+

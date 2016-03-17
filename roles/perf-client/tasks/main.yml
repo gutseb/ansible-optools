@@ -1,0 +1,27 @@
+  - name: Install collectd
+    yum: name={{ item }} state=present
+    with_items:
+      - collectd
+
+  - name: Create collectd config file
+    template: src=10-write_graphite.conf dest=/etc/collectd.d/10-write_graphite.conf owner=root group=root
+    notify: restart collectd
+
+  - name: Write other collectd config files 
+    template: src={{ item }} dest=/etc/collectd.d/{{ item }} owner=root group=root
+    notify: restart collectd
+    with_items: 
+      - 20-general.conf
+      - 24-processes.conf
+
+  - include: collectd-ceph.yml
+    tags: collectd_ceph
+    when: "'ceph' in perf_client_roles"
+
+  - include: collectd-ctrl.yml
+    tags: collectd_ctrl
+    when: "'ctrl' in perf_client_roles"
+
+  - name: Enable and Start collectd
+    service: name=collectd enabled=yes state=started
+

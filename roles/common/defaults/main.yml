@@ -1,0 +1,8 @@
+---
+write_etc_hosts: false
+
+rhn_register: rhn
+#rhn_register: local
+rhn_user: 
+rhn_password:
+

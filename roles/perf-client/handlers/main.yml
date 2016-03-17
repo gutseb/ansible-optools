@@ -1,0 +1,5 @@
+  - name: restart collectd
+    service: name=collectd state=restarted
+
+  - name: restart haproxy
+    service: name=haproxy state=restarted

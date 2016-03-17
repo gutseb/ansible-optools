@@ -1,0 +1,9 @@
+{
+  "rabbitmq": {
+    "port": {{ rabbitmq_port }},
+    "host": "{{ ansible_nodename }}",
+    "user": "{{ sensu_rabbit_user }}",
+    "password": "{{ sensu_rabbit_password }}",
+    "vhost": "{{ sensu_rabbit_vhost }}"
+  }
+}

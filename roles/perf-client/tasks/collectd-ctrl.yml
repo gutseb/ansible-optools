@@ -1,0 +1,80 @@
+  - name: Install collectd
+    yum: name={{ item }} state=present
+    with_items:
+      - collectd
+      - collectd-mysql
+
+  - name: Create collectd mysql config file
+    template: src=20-mysql.conf dest=/etc/collectd.d/20-mysql.conf owner=root group=root
+    notify: restart collectd
+
+  - name: Enable stats socket for haproxy
+    lineinfile: dest=/etc/haproxy/haproxy.cfg regexp="  stats socket /var/run/haproxy.sock mode 600 level admin" insertafter="^global" line="  stats socket /var/run/haproxy.sock mode 600 level admin" backup=yes state=present
+    when: write_haproxy_stats == true
+    notify: restart haproxy
+
+  - name: Pause for 1 second to ensure backup is not overwritten
+    pause: seconds=1
+    changed_when: false
+
+  - name: Enable stats socket for haproxy
+    lineinfile: dest=/etc/haproxy/haproxy.cfg regexp="  stats timeout 2m" insertafter="^global" line="  stats timeout 2m" backup=yes state=present
+    when: write_haproxy_stats == true
+    notify: restart haproxy
+
+  - name: Create collectd plugin directory
+    file: path=/usr/lib64/collectd/plugins state=directory owner=root group=root mode=0755
+
+  - name: Create haproxy plugin directory
+    file: path=/usr/lib64/collectd/plugins/haproxy state=directory owner=root group=root mode=0755
+
+  - name: Copy collectd haproxy plugin
+    copy:
+      src=plugins/haproxy/
+      dest=/usr/lib64/collectd/plugins/haproxy
+      owner=root
+      group=root
+      mode=0755
+
+  - name: Create collectd haproxy config file
+    template: src=21-haproxy.conf dest=/etc/collectd.d/21-haproxy.conf owner=root group=root
+    notify: restart collectd
+
+  # Get bind_host for mongodb
+  - name: Get mongodb bind ip
+    command: openstack-config --get /etc/mongod.conf DEFAULT bind_ip
+    register: mongodb_bind_ip
+    ignore_errors: True
+    changed_when: false
+
+  - name: Set mongodb_bind_ip fact
+    set_fact:
+      mongodb_host: "{{ mongodb_bind_ip.stdout }}"
+    when: mongodb_bind_ip is defined and mongodb_bind_ip.stdout != "" and mongodb_bind_ip.stdout != "0.0.0.0"
+
+  - debug: var=mongodb_host
+    when: mongodb_host is defined
+
+  # collectd_tcp_network_connect required for mongodb python plugin
+  - name: getsebool collectd_tcp_network_connect
+    shell: /usr/sbin/getsebool collectd_tcp_network_connect
+    register: collectd_tcp_network_connect
+    always_run: yes
+    changed_when: false   # Never report as changed
+
+  - name: setsebool -P collectd_tcp_network_connect 1
+    shell: /usr/sbin/setsebool -P collectd_tcp_network_connect on
+    when: collectd_tcp_network_connect.stdout.find(' on') == 0
+
+  - name: Copy collectd mongodb plugin
+    copy:
+      src=plugins/mongodb/
+      dest=/usr/lib64/collectd/plugins/mongodb
+      owner=root
+      group=root
+      mode=0755
+ 
+  - name: Create collectd mongodb config file
+    template: src=22-mongodb.conf dest=/etc/collectd.d/22-mongodb.conf owner=root group=root
+    notify: restart collectd
+

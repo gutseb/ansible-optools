@@ -1,0 +1,83 @@
+  - name: Install packages 
+    yum: name={{ item }} state=present
+    when: ansible_pkg_mgr == "yum"
+    with_items:
+      - fluentd
+      - rubygem-fluent-plugin-add
+
+  #- name: Check if user {{item}} exists
+  #  shell: /usr/bin/getent passwd {{item}} | /usr/bin/wc -l | tr -d ' '
+  #  register: user_exist.{{item}}
+  #  changed_when: false  # Never report as changed
+  #  with_items:
+  #    - ceilometer
+  #    - cinder
+  #    - designate
+  #    - glance
+  #    - ironic
+  #    - keystone
+  #    - manila
+  #    - nova
+  #    - neutron
+  #    - sahara
+  #    - swift
+  #    - trove
+  #
+  #- debug: msg="item.item={{item.item}} item.stdout = {{item.stdout}}"
+  #- debug: var="user_exist.{{item}}.stat"
+  #  with_items:
+  #    - ceilometer
+  #    - cinder
+  #    - glance
+
+  - name: Get Users
+    command: cat /etc/passwd
+    register: etc_passwd
+    always_run: yes
+    changed_when: false         # Never report changed
+
+  - name: Add fluentd user to {{ item }} group
+    user: name=fluentd groups={{ item }} append=yes
+    when: etc_passwd.stdout.find("{{item}}") != -1
+    with_items: 
+      - ceilometer
+      - cinder
+      - designate
+      - glance 
+      - heat
+      - ironic 
+      - keystone
+      - manila
+      - nova
+      - neutron
+      - sahara
+      - swift
+      - trove 
+     
+  - name: Ensure logs are owned by the {{ item }} group  
+    file: path=/var/log/{{item}} state=directory group={{item}} mode=0755
+    when: etc_passwd.stdout.find("{{item}}") != -1
+    with_items:
+      - ceilometer
+      - cinder
+      - designate
+      - glance
+      - heat
+      - ironic
+      - keystone
+      - manila
+      - nova
+      - neutron
+      - sahara
+      - swift
+      - trove
+   
+
+  - name: Write /etc/fluentd/fluent.conf
+    template: src=fluent.conf dest=/etc/fluentd/fluent.conf owner=fluentd group=fluentd mode=0640
+    notify:
+      - restart fluentd
+
+  - name: Enable and Start fluentd
+    service: name=fluentd enabled=yes state=started
+

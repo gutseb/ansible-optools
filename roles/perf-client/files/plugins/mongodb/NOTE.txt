@@ -1,0 +1,1 @@
+This plugin downloaded from https://github.com/sebest/collectd-mongodb.git

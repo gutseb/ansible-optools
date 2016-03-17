@@ -1,0 +1,34 @@
+{
+  "checks": {
+    "cpu": {
+      "command": "/etc/sensu/plugins/check-cpu.sh",
+      "subscribers": [
+        "system"
+      ],
+      "interval": 60
+    },
+    "memory": {
+      "command": "/etc/sensu/plugins/check-memory-percent.sh -w 75 -c 95",
+      "subscribers": [
+        "system"
+      ],
+      "interval": 60
+    },
+    "swap": {
+      "command": "/etc/sensu/plugins/check-swap-percent.sh -w 75 -c 95",
+      "subscribers": [
+        "system"
+      ],
+      "interval": 60
+    },
+    "disk_rootfs": {
+      "command": "/etc/sensu/plugins/check-disk.sh -w 75 -c 95 -d /",
+      "subscribers": [
+        "system"
+      ],
+      "interval": 60
+    }
+  }
+}
+
+

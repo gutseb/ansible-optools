@@ -1,0 +1,28 @@
+# Make certain to add a check for ntp.  If compute nodes have different time than controllers you will get a vif_binding failed on nova boot
+
+
+NEED TO FINISH NTP SCRIPT
+  - TEST THE NTPD PORTION  
+  - FINISH TESTING CHRONYD - LOOKS GOOD.
+     - JUST NEED TO TEST NTPD PORTION
+
+TEST CEPH CHECK ---> Add intelligence for OSD and MONs checks
+NEED TO WRITE CEPH METRICS TO GRAPHITE
+  -> IOPS and MB/s
+
+MySQL Checks: 
+
+# Note this needs /root/.my.cnf - > Should add a connection test
+
+max_con:
+echo "show variables like 'max_connections'" | mysql
+used_con:
+echo "SHOW GLOBAL STATUS LIKE 'Threads_connected'" | mysql
+  # Pass a warn and critical
+
+# Basic alive check: 
+echo "status" | mysql
+### Or maybe test logging in/out of a DB?)
+
+Add a galera Sync check 
+Add a non-galera replication check?

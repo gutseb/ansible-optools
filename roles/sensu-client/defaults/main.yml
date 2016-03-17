@@ -1,0 +1,25 @@
+---
+# Defaults file for optools
+sensu_rabbit_user: sensu
+sensu_rabbit_password: sensu
+sensu_rabbit_vhost: /sensu
+
+rabbit_remove_guest: true
+rabbit_enable_management: true
+
+rabbitmq_port: 5672
+
+sensu_plugins_path: /etc/sensu/plugins
+
+# Sensu OpenStack Credentials
+os_username: monitoring
+os_password: sensu
+os_tenant_name: monitoring
+os_auth_url: http://keystone_host:5000/v2.0/
+keystone_v3: false
+### For V3
+#os_auth_url: http://keystone_host:5000/v3/
+#os_project_domain_name: Default
+#os_user_domain_name: Default
+
+

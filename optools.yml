@@ -1,0 +1,52 @@
+---
+#- hosts: rabbitmq-servers
+#  roles: 
+#    - common
+#    - rabbitmq-server
+#
+#- hosts: redis-servers
+#  roles:
+#    - common
+#    - redis-server
+
+- hosts: sensu-servers
+  roles:
+    - common
+    - sensu-server
+  tags: sensu-server
+
+- hosts: efk-servers
+  roles:
+    - common
+    - efk-server
+  tags: efk-server
+
+- hosts: perf-servers
+  roles:
+    - common
+    - perf-server
+  tags: perf-server
+
+- hosts: sensu-clients
+  roles: 
+    - common
+    - sensu-client
+  become: true
+  tags: sensu-client
+
+- hosts: efk-clients
+  roles:
+    - common
+    - efk-client
+  become: true
+  tags: efk-client
+
+- hosts: perf-clients
+  roles:
+    - common
+    - perf-client
+  become: true
+  tags: perf-client
+
+
+

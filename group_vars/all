@@ -1,0 +1,73 @@
+---
+# This is site wide default
+ansible_ssh_user: root
+
+# Set to write /etc/hosts entries of all hosts in all hosts
+write_etc_hosts: true 
+
+# Enable the stats socket in haproxy - needed for haproxy perf
+write_haproxy_stats: true
+
+### rhn_register: local  -> Use local repos file roles/common/files/optools.repo
+rhn_register: local
+### rhn_register: rhn -> Use RHN - set the user/password to use this
+#rhn_user:
+#rhn_password:
+
+# Sensu Rabbit Details
+#sensu_rabbit_user: sensu
+#sensu_rabbit_password: sensu
+#sensu_rabbit_vhost: /sensu
+
+sensu_plugins_path: /etc/sensu/plugins
+
+# Sensu OpenStack Credentials
+os_username: monitoring
+os_password: sensu
+os_tenant_name: monitoring
+### Insert your keystone IP below
+os_auth_url: http://192.168.225.20:5000/v2.0/
+keystone_v3: false
+### For V3
+#os_auth_url: http://keystone_host:5000/v3/
+#os_project_domain_name: Default
+#os_user_domain_name: Default
+
+# RabbitMQ connection
+override_rabbitmq_ip: '192.168.220.250'
+### Enable rabbitmq stats plugin to pull rabbit metrics
+enable_rabbitmq_management_plugin: true
+
+# Host overrides are used where host name lookup is not functioning 
+# for multi-homed hosts 
+# Override Graphite Host (optional) - comment out unless needed
+graphite_host: 192.168.220.250
+
+# Override FluentD Server Hostname - comment out unless needed
+fluent_host: 192.168.220.250
+
+# Test pool for Ceph monitoring via collectd - this will be created
+ceph_monitoring_pool: 'monitor'
+ceph_cluster: 'ceph'
+create_ceph_pool: true
+ceph_pool_pgs: 32
+
+# Overwrite Grafana Dashboard
+overwrite_existing_grafana_dashboards: True
+
+### Ports for Services
+# Sensu
+sensu_api_port: 4567
+rabbitmq_port: 5672
+redis_port: 6379
+#uchiwa_port: 3000
+### modified uchiwa port to avoid collition with grafana when all in one
+uchiwa_port: 3001
+# EFK
+fluentd_port: 4000
+elasticsearch_port: 9200
+#kibana_port: 80
+### modified kibana to avoid collision with graphite when all in one
+kibana_port: 8080
+# Perf
+### At the moment these are not configurable.  carbon = 2003, grafana = 3000, graphite = 80

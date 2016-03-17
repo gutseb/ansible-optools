@@ -1,0 +1,76 @@
+{
+  "checks": {
+    "ceilometer_api": {
+      "handlers": ["default", "email"],
+      "command": "{{ sensu_plugins_path }}/check_ceilometer-api.sh",
+      "subscribers": [
+        "api"
+      ],
+      "interval": 60
+    },
+    "cinder_api": {
+      "handlers": ["default", "email"],
+      "command": "{{ sensu_plugins_path }}/check_cinder-api.sh",
+      "subscribers": [
+        "api"
+      ],
+      "interval": 60
+    },
+    "cinder_volume": {
+      "handlers": ["default", "email"],
+      "command": "{{ sensu_plugins_path }}/check_cinder-create.sh",
+      "subscribers": [
+        "api"
+      ],
+      "interval": 300
+    },
+    "glance_api": {
+      "handlers": ["default", "email"],
+      "command": "{{ sensu_plugins_path }}/check_glance-api.sh",
+      "subscribers": [
+        "api"
+      ],
+      "interval": 60
+    },
+    "glance_upload": {
+      "handlers": ["default", "email"],
+      "command": "{{ sensu_plugins_path }}/check_glance-upload.sh",
+      "subscribers": [
+        "api"
+      ],
+      "interval": 300
+    },
+    "keystone_api": {
+      "handlers": ["default", "email"],
+      "command": "{{ sensu_plugins_path }}/check_keystone-api.sh",
+      "subscribers": [
+        "api"
+      ],
+      "interval": 60
+    },
+    "heat_api": {
+      "handlers": ["default", "email"],
+      "command": "{{ sensu_plugins_path }}/check_heat-api.sh",
+      "subscribers": [
+        "api"
+      ],
+      "interval": 60
+    },
+    "neutron_api": {
+      "handlers": ["default", "email"],
+      "command": "{{ sensu_plugins_path }}/check_neutron-api.sh",
+      "subscribers": [
+        "api"
+      ],
+      "interval": 60
+    },
+    "nova_api": {
+      "handlers": ["default", "email"],
+      "command": "{{ sensu_plugins_path }}/check_nova-api.sh",
+      "subscribers": [
+        "api"
+      ],
+      "interval": 60
+    }
+  }
+}

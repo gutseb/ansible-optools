@@ -1,0 +1,35 @@
+  - name: Install collectd
+    yum: name={{ item }} state=present
+    with_items:
+      - collectd
+
+  # Recursive?
+  - name: Create Ceph plugin directory
+    file: path=/usr/lib64/collectd/plugins state=directory owner=root group=root mode=0755
+
+  - name: Create Ceph plugin directory
+    file: path=/usr/lib64/collectd/plugins/ceph state=directory owner=root group=root mode=0755
+
+  - name: Copy collectd ceph plugin
+    copy:
+      src=plugins/ceph/
+      dest=/usr/lib64/collectd/plugins/ceph
+      owner=root
+      group=root
+      mode=0755
+
+  # Create a Ceph pool for monitoring
+  - name: List ceph pools
+    command: rados lspools
+    register: rados_pools
+    when: create_ceph_pool
+    changed_when: false
+
+  - name: Create ceph pool {{ ceph_monitoring_pool }}
+    command: ceph osd pool create {{ ceph_monitoring_pool }} {{ ceph_pool_pgs }} {{ ceph_pool_pgs }}
+    when: "ceph_monitoring_pool not in rados_pools.stdout and create_ceph_pool"
+
+  - name: Create collectd ceph config file
+    template: src=20-ceph.conf dest=/etc/collectd.d/20-ceph.conf owner=root group=root
+    notify: restart collectd
+

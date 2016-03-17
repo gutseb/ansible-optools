@@ -1,0 +1,15 @@
+{
+  "sensu": [
+    {
+      "name": "Openstack",
+      "host": "{{ ansible_nodename }}",
+      "port": {{ sensu_api_port }}
+    }
+  ],
+  "uchiwa": {
+    "host": "0.0.0.0",
+    "port": {{ uchiwa_port }},
+    "refresh": 5
+  }
+}
+

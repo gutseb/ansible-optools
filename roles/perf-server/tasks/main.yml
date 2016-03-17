@@ -1,0 +1,159 @@
+  # collectd for collection on clients 
+  # graphite (with carbon backend) to aggregate/store data
+  # grafana to display data
+
+  - name: Check for firewalld/iptables
+    command: firewall-cmd --state
+    register: firewalld
+    always_run: yes
+    changed_when: false  # Never report as changed
+    ignore_errors: yes
+
+  - name: get iptables rules
+    command: iptables -L
+    register: iptablesrules
+    always_run: yes
+    changed_when: false  # Never report as changed
+    when: firewalld.rc!=0
+
+  - name: iptables - Allow incoming Carbon Connection
+    command: /sbin/iptables -A INPUT -p tcp --dport 2003 -j ACCEPT -m comment --comment "Allow incoming carbon"
+    when: firewalld.rc!=0 and iptablesrules.stdout.find("Allow incoming grafana") == -1
+
+  - name: iptables - Allow incoming Grafana Connection
+    command: /sbin/iptables -A INPUT -p tcp --dport 3000 -j ACCEPT -m comment --comment "Allow incoming grafana"
+    when: firewalld.rc!=0 and iptablesrules.stdout.find("Allow incoming grafana") == -1
+
+  - name: iptables - save everything 
+    shell: iptables-save > /etc/sysconfig/iptables
+    when: firewalld.rc!=0
+
+  - name: firewalld - Allow incoming Carbon Connection
+    firewalld: port=2003/tcp state=enabled permanent=yes zone=public immediate=yes # immediate=yes only on ansible>=1.9
+    when: firewalld.rc==0
+    sudo: true
+
+  - name: firewalld - Allow incoming Grafana Connection
+    firewalld: port=3000/tcp state=enabled permanent=yes zone=public immediate=yes # immediate=yes only on ansible>=1.9
+    when: firewalld.rc==0
+    sudo: true
+
+  - name: getsebool collectd_tcp_network_connect
+    shell: /usr/sbin/getsebool collectd_tcp_network_connect
+    register: collectd_tcp_network_connect
+    always_run: yes
+    changed_when: false   # Never report as changed
+
+  - name: setsebool -P collectd_tcp_network_connect 1
+    shell: /usr/sbin/setsebool -P collectd_tcp_network_connect on
+    when: collectd_tcp_network_connect.stdout.find(' on') == 0
+
+  - name: Install graphite/grafana packages (collection aggregation/relay)
+    yum: name={{ item }} state=present
+    with_items:
+      - python-carbon
+      - graphite-web
+      - grafana
+      - httpd
+
+  - name: Ensure graphite-web.conf has Require all granted
+    lineinfile: dest=/etc/httpd/conf.d/graphite-web.conf regexp="Require local" line="           Require all granted" state=present backrefs=yes
+    notify: restart httpd
+
+  - name: Check if graphite database exists 
+    stat: path=/var/lib/graphite-web/graphite.db
+    register: graphite_db_exists
+
+  - name: Initial graphite database population
+    command: sudo -u apache /usr/bin/graphite-manage syncdb --noinput
+    when: graphite_db_exists.stat.exists == False
+
+  - name: Configure carbon storage retention policy
+    template: src=storage-schemas.conf dest=/etc/carbon/storage-schemas.conf owner=root group=root
+    # No need to restart carbon... It will scan this file every 60 seconds
+
+  - name: Enable and Start httpd
+    service: name=httpd enabled=yes state=started
+
+  - name: Enable and start carbon-cache
+    service: name=carbon-cache enabled=yes state=started
+
+  - name: Enable and Start grafana-server
+    service: name=grafana-server enabled=yes state=started
+
+  #- name: Write create Grafana data source script
+  #  template: src=grafana_datastore.sh dest=/etc/grafana/grafana_datastore.sh owner=grafana group=grafana mode=0755
+  #
+  #- name: Create data store if it doesn't exist
+  #  shell: /etc/grafana/grafana_datastore.sh
+
+  - name: Remove grafana temp cookie if it exists
+    file: path=/tmp/tmp.grafana.cookie state=absent
+
+  - name: Login to grafana API to get cookie
+    command: "curl -H 'Content-Type: application/json;charset=UTF-8' --data-binary '{\"user\":\"admin\",\"email\":\"\",\"password\":\"admin\"}' --cookie-jar '/tmp/tmp.grafana.cookie' http://{{grafana_host|default(hostvars[groups['perf-servers'][0]]['ansible_nodename'])}}:3000/login"
+    changed_when: false  # Never report as changed
+
+  - name: Find all Grafana Data Sources
+    command: "curl --silent --cookie '/tmp/tmp.grafana.cookie' http://{{grafana_host|default(hostvars[groups['perf-servers'][0]]['ansible_nodename'])}}:3000/api/datasources"
+    register: grafana_datasources
+    changed_when: false  # Never report as changed
+
+  - name: Create Grafana Data Source for graphite
+    command: "curl --silent --cookie '/tmp/tmp.grafana.cookie' -X PUT -H 'Content-Type: application/json;charset=UTF-8' --data-binary '{\"name\":\"graphite\",\"type\":\"graphite\",\"url\":\"http://localhost/\",\"access\":\"proxy\",\"database\":\"\",\"user\":\"\",\"password\":\"\",\"basicAuth\":false,\"basicAuthUser\":\"\",\"basicAuthPassword\":\"\",\"isDefault\":true}' http://{{grafana_host|default(hostvars[groups['perf-servers'][0]]['ansible_nodename'])}}:3000/api/datasources"
+    when: "'\"name\":\"graphite\"'not in grafana_datasources.stdout"
+
+  - name: Copy API scripts
+    copy:
+      src: "{{item}}"
+      dest: "/etc/grafana/{{item}}"
+      owner: "grafana"
+      group: "grafana"
+      mode: 0755
+    with_items:
+      - delete_dashboard.sh
+      - getdatasources.sh
+      - grafana_datastore.sh
+      - mkcookie.sh
+      - upload_dashboard.sh
+
+  - name: Remove Existing Dashboards
+    command: "curl --silent --cookie '/tmp/tmp.grafana.cookie' -X DELETE -H 'Content-Type: application/json' http://{{grafana_host|default(hostvars[groups['perf-servers'][0]]['ansible_nodename'])}}:3000/api/dashboards/db/{{item}}"
+    #command: "curl -X DELETE -H 'Authorization: Bearer {{grafana_api_key}}' -H 'Content-Type: application/json' http://{{grafana_host|default(hostvars[groups['perf-servers'][0]]['ansible_nodename'])}}:3000/api/dashboards/db/{{item}}"
+    when: overwrite_existing_grafana_dashboards
+    with_items:
+      - openstack-general-system-performance
+      - ceph-overview
+      - openstack-overview
+
+  - name: Copy Dashboard Files
+    copy:
+      src: "{{item}}.json"
+      dest: "/etc/grafana/{{item}}.json"
+      owner: "grafana"
+      group: "grafana"
+      mode: 0644
+    with_items:
+      - openstack_general_system_performance
+      - ceph-overview
+      - openstack-overview
+
+  - name: Upload Dashboards to Grafana
+    command: "curl --silent --cookie '/tmp/tmp.grafana.cookie' -X POST -H 'Content-Type: application/json' -d @{{item}} http://{{grafana_host|default(hostvars[groups['perf-servers'][0]]['ansible_nodename'])}}:3000/api/dashboards/db"
+    #command: "curl -X POST -H 'Authorization: Bearer {{grafana_api_key}}' -H 'Content-Type: application/json' -d @{{item}} http://{{grafana_host|default(hostvars[groups['perf-servers'][0]]['ansible_nodename'])}}:3000/api/dashboards/db"
+    with_items:
+      - /etc/grafana/openstack_general_system_performance.json
+      - /etc/grafana/ceph-overview.json
+      - /etc/grafana/openstack-overview.json
+
+  - name: Remove leftover json file(s)
+    file: path={{item}} state=absent
+    with_items:
+      - "/etc/grafana/openstack_general_system_performance.json"
+      - "/etc/grafana/ceph-overview.json"
+      - "/etc/grafana/openstack-overview.json"
+
+  - name: Remove grafana temp cookie if it exists
+    file: path=/tmp/tmp.grafana.cookie state=absent
+
+

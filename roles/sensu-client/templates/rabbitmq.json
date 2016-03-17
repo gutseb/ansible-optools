@@ -1,0 +1,13 @@
+{
+  "rabbitmq": {
+    "port": {{ rabbitmq_port }},
+{% if override_rabbitmq_ip is defined and override_rabbitmq_ip != '' %}
+    "host": "{{ override_rabbitmq_ip }}",
+{% else %} 
+    "host": "{{ hostvars[groups['rabbitmq-servers'][0]]['ansible_nodename'] }}",
+{% endif %}
+    "user": "{{ sensu_rabbit_user }}",
+    "password": "{{ sensu_rabbit_password }}",
+    "vhost": "{{ sensu_rabbit_vhost }}"
+  }
+}

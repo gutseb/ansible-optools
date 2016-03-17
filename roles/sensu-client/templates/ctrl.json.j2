@@ -1,0 +1,193 @@
+{
+  "checks": {
+    "rabbitmq_status": {
+      "command": "/usr/bin/sudo /usr/sbin/rabbitmqctl status",
+      "subscribers": [
+        "ctrl"
+      ],
+      "interval": 60
+    },
+    "pacemaker_status": {
+      "command": "/usr/bin/sudo /usr/sbin/crm_mon -s",
+      "subscribers": [
+        "ctrl"
+      ],
+      "interval": 60
+    },
+    "proc_keystone_all": {
+      "command": "{{ sensu_plugins_path }}/check_procs.sh -p keystone-all -m 3 -M 100",
+      "subscribers": [
+        "ctrl", "instack"
+      ],
+      "interval": 60
+    },
+    "proc_nova_api": {
+      "command": "{{ sensu_plugins_path }}/check_procs.sh -p nova-api -m 1 -M 100",
+      "subscribers": [
+        "ctrl", "instack"
+      ],
+      "interval": 60
+    },
+    "proc_glance_api": {
+      "command": "{{ sensu_plugins_path }}/check_procs.sh -p glance-api -m 1 -M 100",
+      "subscribers": [
+        "ctrl", "instack"
+      ],
+      "interval": 60
+    },
+    "proc_glance_registry": {
+      "command": "{{ sensu_plugins_path }}/check_procs.sh -p glance-registry -m 1 -M 100",
+      "subscribers": [
+        "ctrl", "instack"
+      ],
+      "interval": 60
+    },
+    "proc_nova_conductor": {
+      "command": "{{ sensu_plugins_path }}/check_procs.sh -p nova-conductor -m 1 -M 100",
+      "subscribers": [
+        "ctrl", "instack"
+      ],
+      "interval": 60
+    },
+    "proc_nova_consoleauth": {
+      "command": "{{ sensu_plugins_path }}/check_procs.sh -p nova-consoleauth -m 1 -M 1",
+      "subscribers": [
+        "ctrl", "instack"
+      ],
+      "interval": 60
+    },
+    "proc_nova_novncproxy": {
+      "command": "{{ sensu_plugins_path }}/check_procs.sh -p nova-novncproxy -m 1 -M 1",
+      "subscribers": [
+        "ctrl"
+      ],
+      "interval": 60
+    },
+    "proc_neutron-server": {
+      "command": "{{ sensu_plugins_path }}/check_procs.sh -p neutron-server -m 1 -M 100",
+      "subscribers": [
+        "ctrl"
+      ],
+      "interval": 60
+    },
+    "proc_neutron-l3-agent": {
+      "command": "{{ sensu_plugins_path }}/check_procs.sh -p neutron-l3-agent -m 1 -M 1",
+      "subscribers": [
+        "ctrl"
+      ],
+      "interval": 60
+    },
+    "proc_neutron-dhcp-agent": {
+      "command": "{{ sensu_plugins_path }}/check_procs.sh -p neutron-dhcp-agent -m 1 -M 1",
+      "subscribers": [
+        "ctrl"
+      ],
+      "interval": 60
+    },
+    "proc_neutron-openvswitch-agent": {
+      "command": "{{ sensu_plugins_path }}/check_procs.sh -p neutron-openvswitch-agent -m 1 -M 1",
+      "subscribers": [
+        "ctrl"
+      ],
+      "interval": 60
+    },
+    "proc_neutron-metadata-agent": {
+      "command": "{{ sensu_plugins_path }}/check_procs.sh -p neutron-metadata-agent -m 1 -M 100",
+      "subscribers": [
+        "ctrl"
+      ],
+      "interval": 60
+    },
+    "proc_neutron-ns-metadata-proxy": {
+      "command": "{{ sensu_plugins_path }}/check_procs.sh -p neutron-ns-metadata-proxy -m 1 -M 100",
+      "subscribers": [
+        "ctrl"
+      ],
+      "interval": 60
+    },
+    "ceilometer-collector": {
+       "command": "{{ sensu_plugins_path }}/check_amqp.sh -p ceilometer-collector",
+      "subscribers": [
+        "ctrl", "instack"
+      ],
+      "interval": 60
+    },
+    "ceilometer-agent-notification" : {
+       "command": "{{ sensu_plugins_path }}/check_amqp.sh -p ceilometer-agent-notification",
+      "subscribers": [
+        "ctrl", "instack"
+      ],
+      "interval": 60
+    },
+    "ceilometer-alarm-notifier" : {
+       "command": "{{ sensu_plugins_path }}/check_amqp.sh -p ceilometer-alarm-notifier",
+      "subscribers": [
+        "ctrl", "instack"
+      ],
+      "interval": 60
+    },
+    "cinder-scheduler" : {
+       "command": "{{ sensu_plugins_path }}/check_amqp.sh -p cinder-scheduler",
+      "subscribers": [
+        "ctrl"
+      ],
+      "interval": 60
+    },
+    "nova-consoleauth" : {
+       "command": "{{ sensu_plugins_path }}/check_amqp.sh -p nova-consoleauth",
+      "subscribers": [
+        "ctrl", "instack"
+      ],
+      "interval": 60
+    },
+    "nova-conductor" : {
+       "command": "{{ sensu_plugins_path }}/check_amqp.sh -p nova-conductor",
+      "subscribers": [
+        "ctrl", "instack"
+      ],
+      "interval": 60
+    },
+    "nova-scheduler" : {
+       "command": "{{ sensu_plugins_path }}/check_amqp.sh -p nova-scheduler",
+      "subscribers": [
+        "ctrl", "instack"
+      ],
+      "interval": 60
+    },
+    "neutron-server" : {
+       "command": "{{ sensu_plugins_path }}/check_amqp.sh -p neutron-server",
+      "subscribers": [
+        "ctrl", "instack"
+      ],
+      "interval": 60
+    },
+    "neutron-l3-agent" : {
+       "command": "{{ sensu_plugins_path }}/check_amqp.sh -p neutron-l3-agent",
+      "subscribers": [
+        "ctrl"
+      ],
+      "interval": 60
+    },
+    "neutron-lbaas-agent" : {
+       "command": "{{ sensu_plugins_path }}/check_amqp.sh -p neutron-lbaas-agent",
+      "subscribers": [
+        "ctrl"
+      ],
+      "interval": 60
+    },
+    "neutron-dhcp-agent" : {
+       "command": "{{ sensu_plugins_path }}/check_amqp.sh -p neutron-dhcp-agent",
+      "subscribers": [
+        "ctrl", "instack"
+      ],
+      "interval": 60
+    },
+    "heat-engine" : {
+       "command": "{{ sensu_plugins_path }}/check_amqp.sh -p heat-engine",
+      "subscribers": [
+        "ctrl", "instack"
+      ],
+      "interval": 60
+    }
+  }
+}

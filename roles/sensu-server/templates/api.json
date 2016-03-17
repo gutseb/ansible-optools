@@ -1,0 +1,8 @@
+{
+  "api": {
+    "bind": "0.0.0.0",
+    "port": {{ sensu_api_port }},
+    "host": "{{ ansible_nodename }}"
+  }
+}
+

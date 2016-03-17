@@ -1,0 +1,132 @@
+  - name: Install packages (yum)
+    yum: name={{ item }} state=present
+    when: ansible_pkg_mgr == "yum"
+    with_items:
+      - sensu
+      - uchiwa
+      - redis
+      - rabbitmq-server
+
+  - name: Install OpenStack Clients for Monitoring
+    yum: enablerepo=rhel-7-server-openstack-7.0-rpms name={{ item }} state=present
+    when: ansible_pkg_mgr == "yum"
+    with_items:
+      - python-barbicanclient
+      - python-ceilometerclient
+      - python-cinderclient
+      - python-glanceclient
+      - python-heatclient
+      - python-keystoneclient
+      - python-neutronclient
+      - python-novaclient
+      - python-openstackclient
+      - python-saharaclient
+      - python-swiftclient
+      - python-troveclient
+
+  - name: Enable and Start Redis
+    service: name=redis enabled=yes state=started
+
+  - name: Enable and start rabbitmq-server
+    service: name=rabbitmq-server enabled=yes state=started
+  
+  - name: ensure vhost {{ sensu_rabbit_vhost }} is present
+    rabbitmq_vhost: name={{ sensu_rabbit_vhost }} state=present
+
+  - rabbitmq_user: user={{sensu_rabbit_user}}
+                   password={{ sensu_rabbit_password }}
+                   vhost={{ sensu_rabbit_vhost }}
+                   configure_priv=.*
+                   read_priv=.*
+                   write_priv=.*
+                   state=present
+
+  - name: remove default guest user
+    rabbitmq_user: user=guest state=absent
+    when: rabbit_remove_guest
+
+  - name: Enable Rabbit Management Plugin
+    rabbitmq_plugin: names=rabbitmq_management state=enabled
+    notify: restart rabbitmq
+    when: rabbit_enable_management
+  
+  - name: Create Sensu RabbitMQ config file
+    template: src=rabbitmq.json dest=/etc/sensu/conf.d/rabbitmq.json owner=sensu group=sensu mode=0640 
+    notify:
+      - restart sensu-server
+      - restart sensu-api
+
+  - name: Create Sensu redis config file
+    template: src=redis.json dest=/etc/sensu/conf.d/redis.json owner=sensu group=sensu mode=0640
+    notify:
+      - restart sensu-server
+      - restart sensu-api
+
+  - name: Create Sensu API config file
+    template: src=api.json dest=/etc/sensu/conf.d/api.json owner=sensu group=sensu mode=0640
+    notify: 
+      - restart sensu-server
+      - restart sensu-api
+
+  - name: Create Sensu Handlers config file
+    template: src=handlers.json.j2 dest=/etc/sensu/conf.d/handlers.json owner=sensu group=sensu mode=0640
+    notify:
+      - restart sensu-server
+      - restart sensu-api
+
+  - name: Enable and Start sensu-server
+    service: name=sensu-server enabled=yes state=started
+
+  - name: Enable and Start sensu-api
+    service: name=sensu-api enabled=yes state=started
+
+  - name: Create Uchiwa config file
+    template: src=uchiwa.json dest=/etc/uchiwa/uchiwa.json owner=uchiwa group=uchiwa mode=0640
+    notify: restart uchiwa
+
+  - name: Check for firewalld/iptables
+    command: firewall-cmd --state
+    register: firewalld
+    always_run: yes
+    changed_when: false  # Never report as changed
+    ignore_errors: yes
+
+  - name: get iptables rules
+    command: iptables -L
+    register: iptablesrules
+    always_run: yes
+    changed_when: false  # Never report as changed
+    when: firewalld.rc!=0
+
+  - name: iptables - Allow incoming Uchiwa Connection
+    command: /sbin/iptables -A INPUT -p tcp --dport {{ uchiwa_port }} -j ACCEPT -m comment --comment "Allow incoming Uchiwa"
+    when: firewalld.rc!=0 and iptablesrules.stdout.find("Allow incoming Uchiwa") == -1
+
+  - name: iptables - Allow incoming rabbitmq Connection
+    command: /sbin/iptables -A INPUT -p tcp --dport {{ rabbitmq_port }} -j ACCEPT -m comment --comment "Allow incoming rabbitmq"
+    when: firewalld.rc!=0 and iptablesrules.stdout.find("Allow incoming rabbitmq") == -1
+
+  - name: iptables - save everything
+    shell: iptables-save > /etc/sysconfig/iptables
+    when: firewalld.rc!=0
+
+
+  - name: firewalld - Allow incoming Uchiwa Connection 
+    firewalld: port={{ uchiwa_port }}/tcp state=enabled permanent=yes zone=public immediate=yes # immediate=yes only on ansible>=1.9
+    when: firewalld.rc==0
+    sudo: true
+
+  - name: firewalld - Allow incoming rabbitmq Connection 
+    firewalld: port={{ rabbitmq_port }}/tcp state=enabled permanent=yes zone=public immediate=yes # immediate=yes only on ansible>=1.9
+    when: firewalld.rc==0
+    sudo: true
+
+  - name: iptables - save everything
+    shell: iptables-save > /etc/sysconfig/iptables
+
+  - name: Enable and Start Uchiwa
+    service: name=uchiwa enabled=yes state=started
+
+
+
+    

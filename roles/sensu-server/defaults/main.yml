@@ -1,0 +1,14 @@
+---
+# Defaults for Sensu
+sensu_rabbit_user: sensu
+sensu_rabbit_password: sensu
+sensu_rabbit_vhost: /sensu
+
+rabbit_remove_guest: true
+rabbit_enable_management: true
+
+sensu_api_port: 4567
+rabbitmq_port: 5672
+redis_port: 6379
+uchiwa_port: 3000
+

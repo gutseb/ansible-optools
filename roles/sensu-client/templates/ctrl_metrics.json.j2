@@ -1,0 +1,123 @@
+{
+  "checks": {
+    "metric-ceilometer_api": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/ceilometer_api_local_check.py {{ ceilometer_host|default(ansible_default_ipv4.address)}}",
+      "standalone": true,
+      "interval": 60
+    },
+    "metric-cinder_api": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/cinder_api_local_check.py {{ cinder_host|default(ansible_default_ipv4.address) }}",
+      "standalone": true,
+      "interval": 60
+    },
+    "metric-cinder_service": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/cinder_service_check.py {{ cinder_host|default(ansible_default_ipv4.address) }}",
+      "standalone": true,
+      "interval": 60
+    },
+    "metric-galera": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/galera_check.py {{ ansible_default_ipv4.address }}",
+      "standalone": true,
+      "interval": 60
+    },
+    "metric-glance_api": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/glance_api_local_check.py {{ glance_host|default(ansible_default_ipv4.address) }}",
+      "standalone": true,
+      "interval": 60
+    },
+    "metric-glance_api": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/glance_api_local_check.py {{ glance_api_host|default(ansible_default_ipv4.address) }}",
+      "standalone": true,
+      "interval": 60
+    },
+    "metric-glance_registry": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/glance_registry_local_check.py {{ glance_registry_host|default(ansible_default_ipv4.address) }}",
+      "standalone": true,
+      "interval": 60
+    },
+    "metric-heat_api": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/heat_api_local_check.py {{ heat_host|default(ansible_default_ipv4.address)}}",
+      "standalone": true,
+      "interval": 60
+    },
+    "metric-horizon": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/horizon_check.py {{ nova_host|default(ansible_default_ipv4.address)}}",
+      "standalone": true,
+      "interval": 60
+    },
+    "metric-keystone_api": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/keystone_api_local_check.py {{ keystone_host|default(ansible_default_ipv4.address)}}",
+      "standalone": true,
+      "interval": 60
+    },
+    "metric-memcached": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/memcached_status.py --port 11211 {{ nova_host|default(ansible_default_ipv4.address)}}",
+      "standalone": true,
+      "interval": 60
+    },
+    "metric-neutron_api": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/neutron_api_local_check.py {{ neutron_host|default(ansible_default_ipv4.address)}}",
+      "standalone": true,
+      "interval": 60
+    },
+    "metric-neutron_service": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/neutron_service_check.py {{ neutron_host|default(ansible_default_ipv4.address)}}",
+      "standalone": true,
+      "interval": 60
+    },
+    "metric-nova_api": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/nova_api_local_check.py {{ nova_host|default(ansible_default_ipv4.address)}}",
+      "standalone": true,
+      "interval": 60
+    },
+    "metric-nova_api_metadata": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/nova_api_metadata_local_check.py {{ nova_host|default(ansible_default_ipv4.address)}}",
+      "standalone": true,
+      "interval": 60
+    },
+    "metric-nova_service": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/nova_service_check.py {{ nova_host|default(ansible_default_ipv4.address)}}",
+      "standalone": true,
+      "interval": 60
+    },
+    "metric-rabbitmq": {
+      "type": "metric",
+      "handlers": ["graphite"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/rpc-maas/rabbitmq_status.py -c False",
+      "standalone": true,
+      "interval": 60
+    }
+  }
+}

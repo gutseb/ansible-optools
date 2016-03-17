@@ -1,0 +1,85 @@
+  
+#### NEED TO UPDATE THESE TEMPLATES FOR VARS RATHER THAN HARD CODED!
+
+  - name: Install packages (yum)
+    yum: name={{ item }} state=present
+    when: ansible_pkg_mgr == "yum"
+    with_items:
+      - sensu
+  
+  - name: Create Sensu RabbitMQ config file
+    template: src=rabbitmq.json dest=/etc/sensu/conf.d/rabbitmq.json owner=sensu group=sensu
+    notify:
+      - restart sensu-client
+
+  - include: openstack-facts.yml
+    tags: openstack_facts
+    when: "'ctrl' in sensu_client_subscription_names"
+
+  - name: Copy all checks files 
+    copy:
+      src=sensu/plugins/
+      dest=/etc/sensu/plugins/
+      owner=sensu
+      group=sensu
+      mode=0750
+
+  - name: Enable RabbitMQ Management Plugin
+    command: rabbitmq-plugins enable rabbitmq_management
+    when: "'ctrl' in sensu_client_subscription_names and enable_rabbitmq_management_plugin"
+
+  - name: Create MySQL Credentials File
+    template: src=my.cnf.j2 dest=/root/.my.cnf owner=root group=root mode=0600
+    when: "'ctrl' in sensu_client_subscription_names"
+
+  - name: Create Keystone Credentials File 
+    template: src=keystonerc_sensu.j2 dest=/etc/sensu/keystonerc_sensu owner=sensu group=sensu mode=0600
+    when: "'api' in sensu_client_subscription_names or 'ctrl' in sensu_client_subscription_names"
+
+  # We could limit this to just relavant per role, but doesn't hurt
+  - name: Deploy all checks configurations 
+    template:
+      src={{ item }}.json.j2
+      dest=/etc/sensu/conf.d/{{ item }}.json
+      owner=sensu
+      group=sensu
+      mode=0640
+    with_items:
+      - system
+      - openstack_api
+      - ctrl
+      - comp
+      - ceph
+    notify:
+      - restart sensu-client
+
+  - name: Deploy controller node-specific standalone checks
+    template:
+      src={{ item }}.json.j2
+      dest=/etc/sensu/conf.d/{{ item }}.json
+      owner=sensu
+      group=sensu
+      mode=0640
+    with_items:
+      - ctrl_metrics
+    notify:
+      - restart sensu-client
+    when: "'ctrl' in sensu_client_subscription_names"
+  
+  - name: generate sudoers for sensu
+    template:
+      src=sensu_sudoers.j2
+      dest=/etc/sudoers.d/sensu
+      owner=root
+      group=root
+      mode=0440
+      backup=yes
+
+  - name: Create Sensu Client Config
+    template: src=client.json dest=/etc/sensu/conf.d/client.json owner=sensu group=sensu mode=0644
+    notify:
+      - restart sensu-client
+
+  - name: Enable and Start sensu-client
+    service: name=sensu-client enabled=yes state=started
+

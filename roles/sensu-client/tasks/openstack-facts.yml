@@ -1,0 +1,122 @@
+  ### This playbook determines bind hosts for openstack monitoring
+
+  ##### Glance API
+  - name: Get glance-api bind host 
+    command: openstack-config --get /etc/glance/glance-api.conf DEFAULT bind_host
+    register: glance_api
+    ignore_errors: True
+    changed_when: false
+
+  - name: Set glance-api fact
+    set_fact: 
+      glance_api_host: "{{ glance_api.stdout }}"
+    when: glance_api is defined and glance_api.stdout != "" and glance_api.stdout != "0.0.0.0"
+
+  - debug: var=glance_api_host
+    when: glance_api_host is defined 
+
+  ##### Glance Registry
+  - name: Get glance-registry bind host
+    command: openstack-config --get /etc/glance/glance-registry.conf DEFAULT bind_host
+    register: glance_registry
+    ignore_errors: True
+    changed_when: false
+
+  - name: Set glance-registry fact
+    set_fact:
+      glance_registry_host: "{{ glance_registry.stdout }}"
+    when: glance_registry is defined and glance_registry.stdout != "" and glance_registry.stdout != "0.0.0.0"
+
+  - debug: var=glance_registry_host
+    when: glance_registry_host is defined
+
+  ##### Cinder
+  - name: Get cinder bind host
+    command: openstack-config --get /etc/cinder/cinder.conf DEFAULT osapi_volume_listen
+    register: cinder
+    ignore_errors: True
+    changed_when: false
+
+  - name: Set cinder fact
+    set_fact:
+      cinder_host: "{{ cinder.stdout }}"
+    when: cinder is defined and cinder.stdout != "" and cinder.stdout != "0.0.0.0"
+
+  - debug: var=cinder_host
+    when: cinder_host is defined
+  
+  ##### Nova
+  - name: Get nova bind host
+    command: openstack-config --get /etc/nova/nova.conf DEFAULT osapi_compute_listen
+    register: nova
+    ignore_errors: True
+    changed_when: false
+
+  - name: Set nova fact
+    set_fact:
+      nova_host: "{{ nova.stdout }}"
+    when: nova is defined and nova.stdout != "" and nova.stdout != "0.0.0.0"
+
+  - debug: var=nova_host
+    when: nova_host is defined
+
+  ##### Ceilometer
+  - name: Get ceilometer bind host
+    command: openstack-config --get /etc/ceilometer/ceilometer.conf api host
+    register: ceilometer 
+    ignore_errors: True
+    changed_when: false
+  
+  - name: Set ceilometer fact
+    set_fact:
+      ceilometer_host: "{{ ceilometer.stdout }}"
+    when: ceilometer is defined and ceilometer.stdout != "" and ceilometer.stdout != "0.0.0.0"
+
+  - debug: var=ceilometer_host
+    when: ceilometer_host is defined
+
+  ##### Keystone
+  - name: Get keystone bind host
+    command: openstack-config --get /etc/keystone/keystone.conf DEFAULT public_bind_host
+    register: keystone
+    ignore_errors: True
+    changed_when: false
+
+  - name: Set keystone fact
+    set_fact:
+      keystone_host: "{{ keystone.stdout }}"
+    when: keystone is defined and keystone.stdout != "" and keystone.stdout != "0.0.0.0"
+
+  - debug: var=keystone_host
+    when: keystone_host is defined
+
+  ##### Neutron
+  - name: Get neutron bind host
+    command: openstack-config --get /etc/neutron/neutron.conf DEFAULT bind_host
+    register: neutron
+    ignore_errors: True
+    changed_when: false
+
+  - name: Set neutron fact
+    set_fact:
+      neutron_host: "{{ neutron.stdout }}"
+    when: neutron is defined and neutron.stdout != "" and neutron.stdout != "0.0.0.0"
+
+  - debug: var=neutron_host
+    when: neutron_host is defined
+
+  ##### Heat
+  - name: Get heat bind host
+    command: openstack-config --get /etc/heat/heat.conf heat_api bind_host
+    register: heat
+    ignore_errors: True
+    changed_when: false
+
+  - name: Set heat fact
+    set_fact:
+      heat_host: "{{ heat.stdout }}"
+    when: heat is defined and heat.stdout != "" and heat.stdout != "0.0.0.0"
+
+  - debug: var=heat_host
+    when: heat_host is defined
+

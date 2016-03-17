@@ -1,0 +1,28 @@
+[rhel-7-server-rpms]
+name=Red Hat Enterprise Linux $releasever - $basearch
+baseurl=http://192.168.122.1/repos/rhel-7-server-rpms/
+gpgcheck=1
+enabled=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+[rhel-7-server-optional-rpms]
+name=Red Hat Enterprise Linux $releasever - $basearch Optional
+baseurl=http://192.168.122.1/repos/rhel-7-server-optional-rpms/
+gpgcheck=1
+enabled=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+[rhel-7-server-openstack-7.0-rpms]
+name=rhel-7-server-openstack-7.0-rpms
+baseurl=http://192.168.122.1/repos/rhel-7-server-openstack-7.0-rpms/
+gpgcheck=0
+enabled=0
+
+[rhel-7-server-openstack-7.0-optools-rpms]
+name=rhel-7-server-openstack-7.0-optools-rpms
+baseurl=http://192.168.122.1/repos/rhel-7-server-openstack-7.0-optools-rpms/
+gpgcheck=1
+enabled=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+

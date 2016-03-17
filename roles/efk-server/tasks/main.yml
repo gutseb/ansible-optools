@@ -1,0 +1,129 @@
+  # Fluentd for log collection and forwarding to elasticsearch
+  # Elasticsearch for storage / search capability
+  # Kibana for dashboard
+
+  - name: Install packages 
+    yum: name={{ item }} state=present
+    when: ansible_pkg_mgr == "yum"
+    with_items:
+      - fluentd
+      - elasticsearch
+      - rubygem-fluent-plugin-elasticsearch
+      - kibana
+      - httpd
+
+  - name: Add cors.enabled to elasticsearch.yml
+    lineinfile: "dest=/etc/elasticsearch/elasticsearch.yml state=present line='http.cors.enabled: true'"
+    notify: restart elasticsearch
+
+  - name: Add allow-origin to elasticsearch.yml
+    lineinfile: "dest=/etc/elasticsearch/elasticsearch.yml state=present line='http.cors.allow-origin: \"/.*/\"'"
+    notify: restart elasticsearch
+
+  - name: Create templates directory
+    file: path=/etc/elasticsearch/templates state=directory owner=root group=root mode=0755
+
+  - name: Create elasticsearch default mapping to enable raw fields
+    copy: src=elasticsearch-template.json dest=/etc/elasticsearch/elasticsearch-template.json owner=root group=root mode=0644
+
+  - name: Enable and Start Elasticsearch
+    service: name=elasticsearch enabled=yes state=started
+
+# Add check to verify this responds with a 200 status
+# curl http://localhost:9200/
+
+  - name: Configure fluentd to accept log data and write it to elasticsearch
+    template: src=fluent.conf dest=/etc/fluentd/fluent.conf owner=fluentd group=fluentd
+    notify: restart fluentd
+
+  - name: Enable and Start fluentd
+    service: name=fluentd enabled=yes state=started
+
+  - name: Configure kibana dashboard to point to elasticsearch
+    template: src=kibana3.conf dest=/etc/httpd/conf.d/kibana3.conf owner=root group=root
+
+  - name: Deploy customized OpenStack Logs dashboard
+    copy: src=openstack-log-search.json dest=/usr/share/kibana/app/dashboards/openstack-log-search.json owner=root group=root mode=0644   
+
+  - name: Check if default dashboard exists 
+    stat: path=/usr/share/kibana/app/dashboards/default.json
+    register: default_dashboard
+
+  - name: Backup default dashboard if not a symbolic link
+    command: mv /usr/share/kibana/app/dashboards/default.json /usr/share/kibana/app/dashboards/default.json.orig
+    when: default_dashboard.stat.islnk is defined and default_dashboard.stat.islnk == False
+
+  - name: Remove default dashboard if not a symbolic link
+    file: path=/usr/share/kibana/app/dashboards/default.json state=absent
+    when: default_dashboard.stat.islnk is defined and default_dashboard.stat.islnk == False
+   
+  - name: Make customized OpenStack Logs dashboard the default
+    file: src=/usr/share/kibana/app/dashboards/openstack-log-search.json dest=/usr/share/kibana/app/dashboards/default.json owner=root group=root state=link
+
+  - name: getsebool httpd_can_network_connect
+    shell: getsebool httpd_can_network_connect | grep " on" | wc -l
+    register: httpd_can_network_connect
+    always_run: yes
+    changed_when: false   # Never report as changed
+
+  - name: setsebool -P httpd_can_network_connect 1
+    command: /usr/sbin/setsebool -P httpd_can_network_connect 1
+    when: httpd_can_network_connect.stdout == 0 
+
+  - name: Check for firewalld/iptables
+    command: firewall-cmd --state
+    register: firewalld
+    always_run: yes
+    changed_when: false  # Never report as changed
+    ignore_errors: yes
+
+  - name: get iptables rules
+    command: iptables -L
+    register: iptablesrules
+    always_run: yes
+    changed_when: false  # Never report as changed
+    when: firewalld.rc!=0
+
+  - name: iptables - Allow incoming ElasticSearch Connection
+    command: /sbin/iptables -A INPUT -p tcp --dport {{ elasticsearch_port }} -j ACCEPT -m comment --comment "Allow incoming elasticsearch"
+    when: firewalld.rc!=0 and iptablesrules.stdout.find("Allow incoming elasticsearch") == -1
+
+  - name: iptables - Allow incoming Kibana Connection
+    command: /sbin/iptables -A INPUT -p tcp --dport {{ kibana_port }} -j ACCEPT -m comment --comment "Allow incoming kibana"
+    when: firewalld.rc!=0 and iptablesrules.stdout.find("Allow incoming kibana") == -1
+
+  - name: iptables - Allow incoming fluentd Connection
+    command: /sbin/iptables -A INPUT -p tcp --dport {{ fluentd_port }} -j ACCEPT -m comment --comment "Allow incoming fluentd"
+    when: firewalld.rc!=0 and iptablesrules.stdout.find("Allow incoming fluentd") == -1
+
+  - name: iptables - save everything
+    shell: iptables-save > /etc/sysconfig/iptables
+    when: firewalld.rc!=0
+
+  - name: firewalld - Allow incoming ElasticSearch Connection
+    firewalld: port={{ elasticsearch_port }}/tcp state=enabled permanent=yes zone=public immediate=yes # immediate=yes only on ansible>=1.9
+    when: firewalld.rc==0
+    sudo: true
+
+  - name: firewalld - Allow incoming Kibana Connection
+    firewalld: port={{ kibana_port }}/tcp state=enabled permanent=yes zone=public immediate=yes # immediate=yes only on ansible>=1.9
+    when: firewalld.rc==0
+    sudo: true
+
+  - name: firewalld - Allow incoming Fluentd Connection
+    firewalld: port={{ fluentd_port }}/tcp state=enabled permanent=yes zone=public immediate=yes # immediate=yes only on ansible>=1.9
+    when: firewalld.rc==0
+    sudo: true
+
+  - name: Enable and Start httpd
+    service: name=httpd enabled=yes state=started
+
+  - name: 
+    lineinfile: dest=/etc/httpd/conf/httpd.conf insertafter="^Listen 80" line="Listen {{ kibana_port }}"
+    when: kibana_port != 80
+    notify: restart httpd
+
+    #lineinfile: dest=/etc/httpd/conf/httpd.conf regexp="^Listen " insertafter="^Listen 80" line="Listen {{ kibana_port }}"
+
+#### TO DO : How to get a decent baseline of usable data from the dashboard? 
+##### Basically a how-to guide for users... 

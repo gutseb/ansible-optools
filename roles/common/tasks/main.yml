@@ -1,0 +1,51 @@
+---
+
+- name: Build hosts file
+  lineinfile: dest=/etc/hosts regexp='.*{{ hostvars[item].ansible_default_ipv4.address }}.*$' line="{{ hostvars[item].ansible_default_ipv4.address }} {{ hostvars[item].ansible_nodename }} {{ hostvars[item].ansible_hostname }}" state=present
+  when: hostvars[item].ansible_default_ipv4.address is defined and write_etc_hosts == true
+  with_items: groups['all']
+  tags:
+    - common
+
+- name: rhn | Setup Local Repo 
+  copy: src=optools.repo dest=/etc/yum.repos.d/optools.repo owner=root group=root
+  when: rhn_register == "local"
+  tags: 
+    - common
+    - rhn
+
+- name: rhn | register to rhn
+  command: /usr/bin/subscription-manager register --username={{ rhn_user }} --password={{ rhn_password }}
+  when: rhn_register == "rhn"
+  tags:
+    - common
+    - rhn
+
+- name: rhn | disable all repos
+  command: subscription-manager repos --disable='*'
+  when: rhn_register == "rhn"
+  tags:
+    - common
+    - rhn
+
+- name: rhn | configure red hat repos
+  command: subscription-manager repos --enable=rhel-7-server-rpms --enable=rhel-7-server-optional-rpms --enable=rhel-7-server-openstack-7.0-optools-rpms
+  when: rhn_register == "rhn"
+  tags:
+    - common
+    - rhn
+
+- name: Install Chrony
+  yum: name=chrony state=present
+  when: ansible_pkg_mgr == "yum"
+  tags: 
+    - common
+    - chrony
+
+- name: Enable and Start Chronyd
+  service: name=chronyd enabled=yes state=started
+  tags:
+    - common
+    - chrony
+
+

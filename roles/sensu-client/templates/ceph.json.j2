@@ -1,0 +1,12 @@
+{
+  "checks": {
+    "ceph_health": {
+      "handlers": ["default", "email"],
+      "command": "/usr/bin/sudo {{ sensu_plugins_path }}/check_ceph.sh",
+      "subscribers": [
+        "ceph"
+      ],
+      "interval": 60
+    }
+  }
+}

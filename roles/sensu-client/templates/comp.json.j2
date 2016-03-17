@@ -1,0 +1,25 @@
+{
+  "checks": {
+    "nova-compute": {
+      "command": "{{ sensu_plugins_path }}/check_amqp.sh -p nova-compute",
+      "subscribers": [
+        "comp"
+      ],
+      "interval": 60
+    },
+    "proc_nova_compute": {
+      "command": "{{ sensu_plugins_path }}/check_procs.sh -p nova-compute -m 1 -M 100",
+      "subscribers": [
+        "comp"
+      ],
+      "interval": 60
+    },
+    "proc_ceilometer-agent-compute": {
+      "command": "{{ sensu_plugins_path }}/check_procs.sh -p ceilometer-agent-compute -m 1 -M 1",
+      "subscribers": [
+        "comp"
+      ],
+      "interval": 60
+    }
+  }
+}

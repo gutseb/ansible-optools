@@ -1,0 +1,12 @@
+{
+  "handlers": {
+    "graphite": {
+      "type": "tcp",
+      "socket": {
+        "host": "{{ graphite_host }}",
+        "port": 2003
+      },
+      "mutator": "only_check_output"
+    }
+  }
+}

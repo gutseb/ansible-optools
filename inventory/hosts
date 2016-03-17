@@ -1,0 +1,39 @@
+[sensu-servers]
+ansibleoptools ansible_ssh_user=root
+
+[rabbitmq-servers]
+ansibleoptools ansible_ssh_user=root
+
+[redis-servers]
+ansibleoptools ansible_ssh_user=root
+
+[efk-servers]
+ansibleoptools ansible_ssh_user=root
+
+[perf-servers]
+ansibleoptools ansible_ssh_user=root
+
+[sensu-clients]
+ansibleoptools ansible_ssh_user=root sensu_client_subscription_names='["system","api"]'
+192.168.220.61 ansible_ssh_user=heat-admin sensu_client_subscription_names='["system","ceph"]'
+192.168.220.62 ansible_ssh_user=heat-admin sensu_client_subscription_names='["system","comp"]'
+192.168.220.63 ansible_ssh_user=heat-admin sensu_client_subscription_names='["system","ctrl"]'
+
+# NOTE - efk client cannot co-exist on the efk-server.  If so it will overwrite the server config.  So no ansibleoptools here
+[efk-clients]
+192.168.220.61 ansible_ssh_user=heat-admin
+192.168.220.62 ansible_ssh_user=heat-admin
+192.168.220.63 ansible_ssh_user=heat-admin
+
+[perf-clients]
+ansibleoptools ansible_ssh_user=root perf_client_roles='[""]'
+192.168.220.61 ansible_ssh_user=heat-admin perf_client_roles='["ceph"]'
+192.168.220.62 ansible_ssh_user=heat-admin perf_client_roles='[""]'
+192.168.220.63 ansible_ssh_user=heat-admin perf_client_roles='["ctrl"]'
+
+[clients:children]
+sensu-clients
+efk-clients
+perf-clients
+
+
