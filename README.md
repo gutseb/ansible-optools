@@ -182,7 +182,7 @@ http://develify.com/sensu-metrics-to-graphite-with-tcp-handler/
 But plan to update these to work as a collectd plugin
 
 * Ceph monitoring                                <br>
-A great plugin and dashboard were available here: https://github.com/rochaporto/collectd-ceph.  There were a couple tweaks I made to get this working, altough they were already issues or pull requests related to them
+A great plugin and dashboard were available here: https://github.com/rochaporto/collectd-ceph.  There were a couple tweaks I made to get this working, altough they were already issues or pull requests related to them. A fork with active commits,here https://github.com/grinapo/collectd-ceph
 
 * OpenStack monitoring                           <br>
  Also good detail here, although I did not directly use it:
